@@ -14,6 +14,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import streamlit as st
 
 # ── Page config (MUST be first Streamlit call) ────────────────────────────────
@@ -426,6 +427,145 @@ def _plotly_base(height: int = 360) -> dict:
             font=dict(family=FONT_FAMILY, size=12, color="#E8F0FF"),
         ),
     )
+
+
+def _rz_overview_chart(
+    td_val:  float | None,
+    epa_val: float | None,
+    sr_val:  float | None,
+    l_td:    float,
+    l_epa:   float,
+    l_sr:    float,
+    color:   str,
+) -> go.Figure:
+    """
+    Three semicircular gauge indicators for Red Zone headline stats.
+    Zones are calibrated for defense: left/low = good, right/high = poor.
+    Team-color bar; dashed white threshold at league average; delta vs league.
+    """
+    # Defense-zone color bands (low = good for all three metrics)
+    G = "rgba(34,197,94,0.20)"    # green  — elite range
+    Y = "rgba(234,179,8,0.18)"    # yellow — average range
+    R = "rgba(239,68,68,0.18)"    # red    — poor range
+
+    # Gauge threshold marker at league avg
+    THR = dict(line=dict(color="rgba(210,220,240,0.90)", width=2.5), thickness=0.85)
+
+    # Delta color semantics: higher = worse for a defense
+    WORSE  = dict(color="#F87171")   # increasing (higher than ref) = red
+    BETTER = dict(color="#4ADE80")   # decreasing (lower than ref)  = green
+
+    fig = make_subplots(
+        rows=1, cols=3,
+        specs=[[{"type": "indicator"}, {"type": "indicator"}, {"type": "indicator"}]],
+        subplot_titles=["RZ TD Rate", "RZ EPA / Play", "RZ Success Rate"],
+        horizontal_spacing=0.05,
+    )
+
+    # ── Gauge 1: RZ TD Rate (0–40%, lower = better) ──────────────────────────
+    td_pct = round(float(td_val or 0) * 100, 1)
+    l_td_pct = round(l_td * 100, 1)
+    fig.add_trace(go.Indicator(
+        mode="gauge+number+delta",
+        value=td_pct,
+        number=dict(suffix="%", font=dict(size=26, color=TICK_COLOR, family=FONT_FAMILY)),
+        delta=dict(
+            reference=l_td_pct,
+            valueformat="+.1f",
+            suffix="% vs league",
+            increasing=WORSE,
+            decreasing=BETTER,
+            font=dict(size=12),
+        ),
+        gauge=dict(
+            axis=dict(
+                range=[0, 40], ticksuffix="%", nticks=5,
+                tickfont=dict(size=9, color=TICK_COLOR),
+            ),
+            bar=dict(color=color, thickness=0.60),
+            bgcolor="rgba(0,0,0,0)",
+            borderwidth=0,
+            steps=[
+                {"range": [0,  14], "color": G},
+                {"range": [14, 24], "color": Y},
+                {"range": [24, 40], "color": R},
+            ],
+            threshold=dict(**THR, value=l_td_pct),
+        ),
+    ), row=1, col=1)
+
+    # ── Gauge 2: RZ EPA / play (-0.4–+0.4, lower = better) ──────────────────
+    epa_v = round(float(epa_val or 0), 3)
+    l_epa_v = round(l_epa, 3)
+    fig.add_trace(go.Indicator(
+        mode="gauge+number+delta",
+        value=epa_v,
+        number=dict(valueformat="+.3f", font=dict(size=26, color=TICK_COLOR, family=FONT_FAMILY)),
+        delta=dict(
+            reference=l_epa_v,
+            valueformat="+.3f",
+            suffix=" vs league",
+            increasing=WORSE,
+            decreasing=BETTER,
+            font=dict(size=12),
+        ),
+        gauge=dict(
+            axis=dict(
+                range=[-0.4, 0.4], nticks=5,
+                tickfont=dict(size=9, color=TICK_COLOR),
+            ),
+            bar=dict(color=color, thickness=0.60),
+            bgcolor="rgba(0,0,0,0)",
+            borderwidth=0,
+            steps=[
+                {"range": [-0.40, -0.07], "color": G},
+                {"range": [-0.07,  0.07], "color": Y},
+                {"range": [ 0.07,  0.40], "color": R},
+            ],
+            threshold=dict(**THR, value=l_epa_v),
+        ),
+    ), row=1, col=2)
+
+    # ── Gauge 3: RZ Success Rate (20–70%, lower = better) ────────────────────
+    sr_pct = round(float(sr_val or 0) * 100, 1)
+    l_sr_pct = round(l_sr * 100, 1)
+    fig.add_trace(go.Indicator(
+        mode="gauge+number+delta",
+        value=sr_pct,
+        number=dict(suffix="%", font=dict(size=26, color=TICK_COLOR, family=FONT_FAMILY)),
+        delta=dict(
+            reference=l_sr_pct,
+            valueformat="+.1f",
+            suffix="% vs league",
+            increasing=WORSE,
+            decreasing=BETTER,
+            font=dict(size=12),
+        ),
+        gauge=dict(
+            axis=dict(
+                range=[20, 70], ticksuffix="%", nticks=6,
+                tickfont=dict(size=9, color=TICK_COLOR),
+            ),
+            bar=dict(color=color, thickness=0.60),
+            bgcolor="rgba(0,0,0,0)",
+            borderwidth=0,
+            steps=[
+                {"range": [20, 37], "color": G},
+                {"range": [37, 47], "color": Y},
+                {"range": [47, 70], "color": R},
+            ],
+            threshold=dict(**THR, value=l_sr_pct),
+        ),
+    ), row=1, col=3)
+
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family=FONT_FAMILY, size=12, color=TICK_COLOR),
+        margin=dict(l=10, r=10, t=55, b=0),
+        height=230,
+    )
+    return fig
 
 
 def _axis_style(title: str = "", **kwargs) -> dict:
@@ -872,34 +1012,13 @@ def tab_redzone(df_rz: pd.DataFrame, team: str, color: str, league_avg: dict):
         epa_val = float(row["epa"])     if not pd.isna(row.get("epa",      np.nan)) else None
         sr_val  = float(row["sr"])      if not pd.isna(row.get("sr",       np.nan)) else None
 
-        # Native st.metric() widgets — no HTML/CSS needed.
-        # delta_color="inverse" because lower values = better defense.
-        chip_c1, chip_c2, chip_c3 = st.columns(3)
-        with chip_c1:
-            if td_val is not None:
-                st.metric(
-                    label="RZ TD Rate",
-                    value=f"{td_val:.1%}",
-                    delta=f"{td_val - l_td:+.1%} vs league",
-                    delta_color="inverse",
-                )
-        with chip_c2:
-            if epa_val is not None:
-                st.metric(
-                    label="RZ EPA / play",
-                    value=f"{epa_val:+.3f}",
-                    delta=f"{epa_val - l_epa:+.3f} vs league",
-                    delta_color="inverse",
-                )
-        with chip_c3:
-            if sr_val is not None:
-                st.metric(
-                    label="RZ Success Rate",
-                    value=f"{sr_val:.1%}",
-                    delta=f"{sr_val - l_sr:+.1%} vs league",
-                    delta_color="inverse",
-                )
-        st.markdown("<br>", unsafe_allow_html=True)
+        # Gauge dial charts — team color bar, league-avg threshold, delta vs league.
+        # Green zone = elite for defense, yellow = average, red = poor.
+        st.plotly_chart(
+            _rz_overview_chart(td_val, epa_val, sr_val, l_td, l_epa, l_sr, color),
+            use_container_width=True,
+            config={"responsive": True},
+        )
 
     st.markdown('<div class="section-head">Red Zone Efficiency</div>', unsafe_allow_html=True)
     st.markdown(
