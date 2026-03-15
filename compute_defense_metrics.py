@@ -17,11 +17,54 @@ import sys
 import json
 import argparse
 import warnings
+import subprocess as _sp
+from pathlib import Path
 
+# ── Auto-install required packages ───────────────────────────────────────────
+# Runs at import time so all third-party packages below are guaranteed present.
+
+def _ensure_packages():
+    """Auto-install nfl_data_py/pyarrow if missing.
+    Fast-fails immediately if run from any Python outside the Anaconda env,
+    because pip cannot safely install scientific packages there."""
+    import importlib.util
+
+    # Guard: check the interpreter path, not just whether a package is present.
+    # The system Python 3.13 may have a partial pandas install, but it cannot
+    # build nfl_data_py's transitive dependencies (missing pkg_resources, etc.).
+    # Any executable not under /opt/anaconda3 is the wrong environment.
+    _CONDA_ENV = "/opt/anaconda3/envs/Python3127/bin/python"
+    if "/opt/anaconda3" not in sys.executable:
+        print(
+            "\n⚠️  Wrong Python interpreter detected.\n"
+            f"   Running as: {sys.executable}\n\n"
+            "   This script requires the project Anaconda environment.\n"
+            "   Run with:\n\n"
+            f"       {_CONDA_ENV} \"{__file__}\"\n"
+        )
+        sys.exit(1)
+
+    # Only auto-install packages not in the conda env baseline.
+    # pandas / numpy / matplotlib ship with Anaconda — never pip-install them.
+    optional = [
+        ("nfl_data_py", "nfl_data_py"),
+        ("pyarrow",     "pyarrow"),
+    ]
+    missing = [install for import_name, install in optional
+               if importlib.util.find_spec(import_name) is None]
+    if missing:
+        print(f"Installing missing packages: {', '.join(missing)} …")
+        _sp.check_call(
+            [sys.executable, "-m", "pip", "install", "--quiet"] + missing
+        )
+        print("  Installation complete.\n")
+
+_ensure_packages()
+
+# ── Third-party imports (guaranteed present after _ensure_packages) ───────────
 import numpy as np
 import pandas as pd
 import nfl_data_py as nfl
-from pathlib import Path
 
 warnings.filterwarnings("ignore", category=pd.errors.PerformanceWarning)
 

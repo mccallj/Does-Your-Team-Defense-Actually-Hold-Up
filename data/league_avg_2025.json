@@ -1,0 +1,13 @@
+{
+  "epa_allowed": 0.0071,
+  "success_rate": 0.4398,
+  "yards_allowed": 5.412,
+  "td_rate": 0.0415,
+  "first_down_rate": 0.2944,
+  "pressure_rate": 0.09,
+  "rz_td_rate": 0.1926,
+  "rz_epa": -0.0032,
+  "rz_success_rate": 0.4229,
+  "sh_epa": -0.0054,
+  "sh_success_rate": 0.4354
+}
