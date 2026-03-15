@@ -1160,11 +1160,10 @@ def main():
     st.markdown(
         """
         <div class="hero">
-          <div class="hero-eyebrow">2025 NFL Season · Regular Season · nflverse Data</div>
+          <div class="hero-eyebrow">2025 NFL Season · Regular Season · JAMn</div>
           <div class="hero-title">Does Your Team's Defense Actually Hold Up?</div>
           <div class="hero-sub">
-            Select your team and see exactly how the defense performed in 2025 —
-            against every offensive formation, with the lead, from behind, and inside the red zone.
+            Select your team and see exactly how the defense performed in 2025 against every offensive formation, with the lead, from behind, and inside the red zone.
           </div>
         </div>
         """,
