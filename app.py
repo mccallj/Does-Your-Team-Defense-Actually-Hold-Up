@@ -583,13 +583,15 @@ def grouped_bar_chart(
 # ── Stat chip HTML ────────────────────────────────────────────────────────────
 
 def stat_chip(label: str, value: str, sub: str = "", delta_cls: str = "chip-delta-neu") -> str:
-    return f"""
-    <div class="stat-chip">
-      <div class="chip-label">{label}</div>
-      <div class="chip-value">{value}</div>
-      <div class="chip-sub {delta_cls}">{sub}</div>
-    </div>
-    """
+    # Compact single-line HTML — no blank lines between chips so Streamlit's
+    # CommonMark parser does not terminate the HTML block prematurely.
+    return (
+        f'<div class="stat-chip">'
+        f'<div class="chip-label">{label}</div>'
+        f'<div class="chip-value">{value}</div>'
+        f'<div class="chip-sub {delta_cls}">{sub}</div>'
+        f'</div>'
+    )
 
 
 # ── Tab builders ──────────────────────────────────────────────────────────────
