@@ -430,11 +430,10 @@ def _plotly_base(height: int = 360) -> dict:
 
 def _axis_style(title: str = "", **kwargs) -> dict:
     return dict(
-        title=title,
+        title=dict(text=title, font=dict(size=11, color=TICK_COLOR)),
         gridcolor=GRID_COLOR,
         linecolor=GRID_COLOR,
         tickfont=dict(size=11, color=TICK_COLOR),
-        titlefont=dict(size=11, color=TICK_COLOR),
         zeroline=False,
         **kwargs,
     )
