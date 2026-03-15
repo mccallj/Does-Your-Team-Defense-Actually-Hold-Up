@@ -20,7 +20,7 @@ Select any NFL team and see exactly how their 2025 defense held up — against e
 | **Personnel Matchups** | How the defense fared against each offensive personnel package (11, 12, 21, 22, etc.) | EPA allowed + Success rate allowed |
 | **Defensive Front** | Pass and run efficiency surrendered against light, standard, and heavy defensive box alignments | Yards allowed, YAC allowed, EPA |
 | **Game Script** | 2nd-half defensive performance split by score situation (up big → down big) | EPA allowed per play |
-| **Red Zone** | Inside-the-20 efficiency by pass-rush intensity (blitz vs. base) and down, with/without pressure | TD rate, EPA allowed |
+| **Red Zone** | Inside-the-20 efficiency by pass-rush intensity (blitz vs. base) and down, with/without pressure. Headline stats shown as three gauge dials (TD Rate · EPA/Play · Success Rate) with green/yellow/red zones calibrated for defense performance. | TD rate, EPA allowed |
 
 ---
 
@@ -147,6 +147,18 @@ Defense_Report/
 | `score_bucket` | `-score_differential` (defense's team perspective) | Down Big · Down · Slight Deficit · Tied · Slight Lead · Leading · Up Big |
 | `red_zone_flag` | `yardline_100 ≤ 20` | Binary |
 | `pressure_flag` | `qb_hit == 1 OR sack == 1` | Binary |
+
+### Red Zone Gauge Chart
+
+The three headline gauges (RZ TD Rate · RZ EPA / Play · RZ Success Rate) use color zones calibrated for a defense where **lower = better**:
+
+| Zone | Color | TD Rate | EPA / Play | Success Rate |
+|------|-------|---------|-----------|--------------|
+| Elite | 🟢 Green | < 14% | < −0.07 | < 37% |
+| Average | 🟡 Yellow | 14–24% | −0.07 to +0.07 | 37–47% |
+| Poor | 🔴 Red | > 24% | > +0.07 | > 47% |
+
+The dashed white line marks the **league average**. Delta values below each gauge show the difference vs. league, rounded to the nearest hundredth (e.g., `▼ 3.04%`), with green = better than league, red = worse.
 
 ### Minimum Play Threshold
 

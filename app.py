@@ -441,19 +441,19 @@ def _rz_overview_chart(
     """
     Three semicircular gauge indicators for Red Zone headline stats.
     Zones are calibrated for defense: left/low = good, right/high = poor.
-    Team-color bar; dashed white threshold at league average; delta vs league.
+    Team-color bar; dashed white threshold at league average.
+
+    Titles are raised via update_annotations() immediately after make_subplots()
+    so they don't overlap the gauge numbers.
+
+    Delta vs league is rendered as a hand-formatted annotation (not Plotly's
+    built-in delta) to avoid floating-point precision display issues.
+    Values are rounded to the nearest hundredth (2 decimal places).
     """
-    # Defense-zone color bands (low = good for all three metrics)
-    G = "rgba(34,197,94,0.20)"    # green  — elite range
+    G = "rgba(34,197,94,0.20)"    # green  — elite range for a defense
     Y = "rgba(234,179,8,0.18)"    # yellow — average range
     R = "rgba(239,68,68,0.18)"    # red    — poor range
-
-    # Gauge threshold marker at league avg
     THR = dict(line=dict(color="rgba(210,220,240,0.90)", width=2.5), thickness=0.85)
-
-    # Delta color semantics: higher = worse for a defense
-    WORSE  = dict(color="#F87171")   # increasing (higher than ref) = red
-    BETTER = dict(color="#4ADE80")   # decreasing (lower than ref)  = green
 
     fig = make_subplots(
         rows=1, cols=3,
@@ -462,29 +462,25 @@ def _rz_overview_chart(
         horizontal_spacing=0.05,
     )
 
-    # ── Gauge 1: RZ TD Rate (0–40%, lower = better) ──────────────────────────
-    td_pct = round(float(td_val or 0) * 100, 1)
-    l_td_pct = round(l_td * 100, 1)
+    # Raise the subplot title annotations BEFORE adding delta annotations so
+    # update_annotations() only touches these 3 titles, not the delta labels.
+    fig.update_annotations(
+        y=1.18,
+        font=dict(size=13, color=TICK_COLOR, family=FONT_FAMILY),
+    )
+
+    # ── Gauge 1: RZ TD Rate (0–40%, lower = better for defense) ─────────────
+    td_pct   = round(float(td_val  or 0) * 100, 2)
+    l_td_pct = round(l_td * 100, 2)
     fig.add_trace(go.Indicator(
-        mode="gauge+number+delta",
+        mode="gauge+number",
         value=td_pct,
         number=dict(suffix="%", font=dict(size=26, color=TICK_COLOR, family=FONT_FAMILY)),
-        delta=dict(
-            reference=l_td_pct,
-            valueformat="+.1f",
-            suffix="% vs league",
-            increasing=WORSE,
-            decreasing=BETTER,
-            font=dict(size=12),
-        ),
         gauge=dict(
-            axis=dict(
-                range=[0, 40], ticksuffix="%", nticks=5,
-                tickfont=dict(size=9, color=TICK_COLOR),
-            ),
+            axis=dict(range=[0, 40], ticksuffix="%", nticks=5,
+                      tickfont=dict(size=9, color=TICK_COLOR)),
             bar=dict(color=color, thickness=0.60),
-            bgcolor="rgba(0,0,0,0)",
-            borderwidth=0,
+            bgcolor="rgba(0,0,0,0)", borderwidth=0,
             steps=[
                 {"range": [0,  14], "color": G},
                 {"range": [14, 24], "color": Y},
@@ -495,28 +491,17 @@ def _rz_overview_chart(
     ), row=1, col=1)
 
     # ── Gauge 2: RZ EPA / play (-0.4–+0.4, lower = better) ──────────────────
-    epa_v = round(float(epa_val or 0), 3)
+    epa_v   = round(float(epa_val or 0), 3)
     l_epa_v = round(l_epa, 3)
     fig.add_trace(go.Indicator(
-        mode="gauge+number+delta",
+        mode="gauge+number",
         value=epa_v,
         number=dict(valueformat="+.3f", font=dict(size=26, color=TICK_COLOR, family=FONT_FAMILY)),
-        delta=dict(
-            reference=l_epa_v,
-            valueformat="+.3f",
-            suffix=" vs league",
-            increasing=WORSE,
-            decreasing=BETTER,
-            font=dict(size=12),
-        ),
         gauge=dict(
-            axis=dict(
-                range=[-0.4, 0.4], nticks=5,
-                tickfont=dict(size=9, color=TICK_COLOR),
-            ),
+            axis=dict(range=[-0.4, 0.4], nticks=5,
+                      tickfont=dict(size=9, color=TICK_COLOR)),
             bar=dict(color=color, thickness=0.60),
-            bgcolor="rgba(0,0,0,0)",
-            borderwidth=0,
+            bgcolor="rgba(0,0,0,0)", borderwidth=0,
             steps=[
                 {"range": [-0.40, -0.07], "color": G},
                 {"range": [-0.07,  0.07], "color": Y},
@@ -527,28 +512,17 @@ def _rz_overview_chart(
     ), row=1, col=2)
 
     # ── Gauge 3: RZ Success Rate (20–70%, lower = better) ────────────────────
-    sr_pct = round(float(sr_val or 0) * 100, 1)
-    l_sr_pct = round(l_sr * 100, 1)
+    sr_pct   = round(float(sr_val  or 0) * 100, 2)
+    l_sr_pct = round(l_sr * 100, 2)
     fig.add_trace(go.Indicator(
-        mode="gauge+number+delta",
+        mode="gauge+number",
         value=sr_pct,
         number=dict(suffix="%", font=dict(size=26, color=TICK_COLOR, family=FONT_FAMILY)),
-        delta=dict(
-            reference=l_sr_pct,
-            valueformat="+.1f",
-            suffix="% vs league",
-            increasing=WORSE,
-            decreasing=BETTER,
-            font=dict(size=12),
-        ),
         gauge=dict(
-            axis=dict(
-                range=[20, 70], ticksuffix="%", nticks=6,
-                tickfont=dict(size=9, color=TICK_COLOR),
-            ),
+            axis=dict(range=[20, 70], ticksuffix="%", nticks=6,
+                      tickfont=dict(size=9, color=TICK_COLOR)),
             bar=dict(color=color, thickness=0.60),
-            bgcolor="rgba(0,0,0,0)",
-            borderwidth=0,
+            bgcolor="rgba(0,0,0,0)", borderwidth=0,
             steps=[
                 {"range": [20, 37], "color": G},
                 {"range": [37, 47], "color": Y},
@@ -558,12 +532,40 @@ def _rz_overview_chart(
         ),
     ), row=1, col=3)
 
+    # ── Hand-formatted delta annotations ─────────────────────────────────────
+    # Plotly's built-in delta.valueformat is silently ignored in some versions,
+    # producing raw float strings.  We compute the rounded delta in Python and
+    # render it as a plain annotation — full control, zero precision leakage.
+    # x-centers for 3 equal columns with horizontal_spacing=0.05: 0.15 / 0.50 / 0.85
+    X_CENTERS = [0.15, 0.50, 0.85]
+    delta_cfg = [
+        # (val,    league_val, scale_to_pct, unit_suffix)
+        (td_val,  l_td,  True,  "%"),
+        (epa_val, l_epa, False, ""),
+        (sr_val,  l_sr,  True,  "%"),
+    ]
+    for xc, (val, lval, pct, unit) in zip(X_CENTERS, delta_cfg):
+        if val is None:
+            continue
+        d = round((val - lval) * (100 if pct else 1), 2)
+        sym   = "▼" if d < 0 else "▲"
+        clr   = "#4ADE80" if d < 0 else "#F87171"   # green if better, red if worse
+        label = f"{sym} {abs(d):.2f}{unit} vs league"
+        fig.add_annotation(
+            x=xc, y=0.0,
+            xref="paper", yref="paper",
+            xanchor="center", yanchor="top",
+            text=label,
+            showarrow=False,
+            font=dict(size=11, color=clr, family=FONT_FAMILY),
+        )
+
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family=FONT_FAMILY, size=12, color=TICK_COLOR),
-        margin=dict(l=10, r=10, t=55, b=0),
-        height=230,
+        margin=dict(l=10, r=10, t=72, b=36),
+        height=265,
     )
     return fig
 
