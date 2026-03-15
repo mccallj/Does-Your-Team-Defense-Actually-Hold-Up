@@ -612,41 +612,40 @@ def tab_personnel(df_personnel: pd.DataFrame, team: str, color: str, league_avg:
     st.markdown('<div class="section-head">Personnel Matchups</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="chart-note">How did the defense hold up against each offensive personnel grouping?'
-        ' Dots above the dashed line = worse than league average.</div>',
+        ' Dashed line = league average. Longer bar = more allowed by the defense.</div>',
         unsafe_allow_html=True,
     )
 
     col_a, col_b = st.columns(2, gap="medium")
 
     with col_a:
-        fig_epa = lollipop_chart(
-            df_chart   = df_team,
-            x_col      = "epa_allowed",
-            y_col      = "label",
-            color      = color,
-            title      = "EPA Allowed per Play",
-            x_title    = "EPA / play  (lower = better defense)",
-            avg_line   = league_avg.get("epa_allowed"),
-            avg_label  = "League",
-            x_format   = ".3f",
-            height     = max(300, 50 * len(df_team) + 60),
+        fig_epa = grouped_bar_chart(
+            df_chart  = df_team,
+            x_col     = "label",
+            y_cols    = ["epa_allowed"],
+            y_labels  = ["EPA / play"],
+            colors    = [color],
+            title     = "EPA Allowed per Play",
+            x_title   = "EPA / play  (lower = better defense)",
+            avg_lines = {"League": league_avg.get("epa_allowed")}
+                        if league_avg.get("epa_allowed") is not None else None,
+            height    = max(300, 50 * len(df_team) + 60),
         )
         st.plotly_chart(fig_epa, use_container_width=True, config={"responsive": True})
 
     with col_b:
-        fig_sr = lollipop_chart(
-            df_chart   = df_team,
-            x_col      = "success_rate_allowed",
-            y_col      = "label",
-            color      = color,
-            title      = "Success Rate Allowed",
-            x_title    = "Offensive success rate  (lower = better defense)",
-            avg_line   = league_avg.get("success_rate"),
-            avg_label  = "League",
-            x_format   = ".1%",
-            height     = max(300, 50 * len(df_team) + 60),
+        fig_sr = grouped_bar_chart(
+            df_chart  = df_team,
+            x_col     = "label",
+            y_cols    = ["success_rate_allowed"],
+            y_labels  = ["Success rate"],
+            colors    = [color],
+            title     = "Success Rate Allowed",
+            x_title   = "Offensive success rate  (lower = better defense)",
+            avg_lines = {"League": league_avg.get("success_rate")}
+                        if league_avg.get("success_rate") is not None else None,
+            height    = max(300, 50 * len(df_team) + 60),
         )
-        # Format x-axis as percentage
         fig_sr.update_xaxes(tickformat=".0%")
         st.plotly_chart(fig_sr, use_container_width=True, config={"responsive": True})
 
@@ -654,16 +653,15 @@ def tab_personnel(df_personnel: pd.DataFrame, team: str, color: str, league_avg:
     df_yac = df_team.dropna(subset=["yac_allowed"])
     if not df_yac.empty:
         st.markdown('<hr class="thin-hr">', unsafe_allow_html=True)
-        fig_yac = lollipop_chart(
-            df_chart   = df_yac,
-            x_col      = "yac_allowed",
-            y_col      = "label",
-            color      = color,
-            title      = "Yards After Catch Allowed (pass plays only)",
-            x_title    = "Avg YAC / completion  (lower = tighter coverage)",
-            avg_line   = None,
-            x_format   = ".1f",
-            height     = max(280, 50 * len(df_yac) + 60),
+        fig_yac = grouped_bar_chart(
+            df_chart  = df_yac,
+            x_col     = "label",
+            y_cols    = ["yac_allowed"],
+            y_labels  = ["Avg YAC / completion"],
+            colors    = [color],
+            title     = "Yards After Catch Allowed (pass plays only)",
+            x_title   = "Avg YAC / completion  (lower = tighter coverage)",
+            height    = max(280, 50 * len(df_yac) + 60),
         )
         st.plotly_chart(fig_yac, use_container_width=True, config={"responsive": True})
 
