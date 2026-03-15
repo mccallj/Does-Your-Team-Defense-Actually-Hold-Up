@@ -877,30 +877,35 @@ def tab_redzone(df_rz: pd.DataFrame, team: str, color: str, league_avg: dict):
             better = (val < avg) if lower_is_better else (val > avg)
             return "chip-delta-pos" if better else "chip-delta-neg"
 
-        chips_html = '<div class="stat-chips-row">'
-        if td_val is not None:
-            d = td_val - l_td
-            chips_html += stat_chip(
-                "RZ TD Rate", f"{td_val:.1%}",
-                f"{'▲' if d > 0 else '▼'} {abs(d):.1%} vs league",
-                _delta_cls(td_val, l_td, lower_is_better=True),
-            )
-        if epa_val is not None:
-            d = epa_val - l_epa
-            chips_html += stat_chip(
-                "RZ EPA / play", f"{epa_val:+.3f}",
-                f"{'▲' if d > 0 else '▼'} {abs(d):.3f} vs league",
-                _delta_cls(epa_val, l_epa, lower_is_better=True),
-            )
-        if sr_val is not None:
-            d = sr_val - l_sr
-            chips_html += stat_chip(
-                "RZ Success Rate", f"{sr_val:.1%}",
-                f"{'▲' if d > 0 else '▼'} {abs(d):.1%} vs league",
-                _delta_cls(sr_val, l_sr, lower_is_better=True),
-            )
-        chips_html += "</div>"
-        st.markdown(chips_html, unsafe_allow_html=True)
+        # Render each chip in its own st.markdown() call inside a column.
+        # A single concatenated chips_html string causes Streamlit's CommonMark
+        # parser to terminate the HTML block at the first blank line and print
+        # subsequent chips as raw text. Individual calls avoid that entirely.
+        chip_c1, chip_c2, chip_c3 = st.columns(3)
+        with chip_c1:
+            if td_val is not None:
+                d = td_val - l_td
+                st.markdown(stat_chip(
+                    "RZ TD Rate", f"{td_val:.1%}",
+                    f"{'▲' if d > 0 else '▼'} {abs(d):.1%} vs league",
+                    _delta_cls(td_val, l_td, lower_is_better=True),
+                ), unsafe_allow_html=True)
+        with chip_c2:
+            if epa_val is not None:
+                d = epa_val - l_epa
+                st.markdown(stat_chip(
+                    "RZ EPA / play", f"{epa_val:+.3f}",
+                    f"{'▲' if d > 0 else '▼'} {abs(d):.3f} vs league",
+                    _delta_cls(epa_val, l_epa, lower_is_better=True),
+                ), unsafe_allow_html=True)
+        with chip_c3:
+            if sr_val is not None:
+                d = sr_val - l_sr
+                st.markdown(stat_chip(
+                    "RZ Success Rate", f"{sr_val:.1%}",
+                    f"{'▲' if d > 0 else '▼'} {abs(d):.1%} vs league",
+                    _delta_cls(sr_val, l_sr, lower_is_better=True),
+                ), unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
 
     st.markdown('<div class="section-head">Red Zone Efficiency</div>', unsafe_allow_html=True)
