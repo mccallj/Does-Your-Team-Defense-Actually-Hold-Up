@@ -859,52 +859,44 @@ def tab_redzone(df_rz: pd.DataFrame, team: str, color: str, league_avg: dict):
             "sr":        np.average(g["success_rate_allowed"].dropna(),
                                     weights=g.loc[g["success_rate_allowed"].notna(), "plays"])
                          if g["success_rate_allowed"].notna().any() else np.nan,
-        })
+        }),
+        include_groups=False,
     ).reset_index()
 
     if not rz_all.empty:
-        row       = rz_all.iloc[0]
-        l_td      = league_avg.get("rz_td_rate", 0)
-        l_epa     = league_avg.get("rz_epa", 0)
-        l_sr      = league_avg.get("rz_success_rate", 0)
-        td_val    = row["td_rate"]   if not pd.isna(row.get("td_rate",   np.nan)) else None
-        epa_val   = row["epa"]       if not pd.isna(row.get("epa",       np.nan)) else None
-        sr_val    = row["sr"]        if not pd.isna(row.get("sr",        np.nan)) else None
+        row     = rz_all.iloc[0]
+        l_td    = league_avg.get("rz_td_rate", 0)
+        l_epa   = league_avg.get("rz_epa", 0)
+        l_sr    = league_avg.get("rz_success_rate", 0)
+        td_val  = float(row["td_rate"]) if not pd.isna(row.get("td_rate",  np.nan)) else None
+        epa_val = float(row["epa"])     if not pd.isna(row.get("epa",      np.nan)) else None
+        sr_val  = float(row["sr"])      if not pd.isna(row.get("sr",       np.nan)) else None
 
-        def _delta_cls(val, avg, lower_is_better=True):
-            if val is None or avg is None:
-                return "chip-delta-neu"
-            better = (val < avg) if lower_is_better else (val > avg)
-            return "chip-delta-pos" if better else "chip-delta-neg"
-
-        # Use st.metric() — native Streamlit widget, no HTML/CSS dependency.
-        # delta_color="inverse" because lower values are better for the defense.
+        # Native st.metric() widgets — no HTML/CSS needed.
+        # delta_color="inverse" because lower values = better defense.
         chip_c1, chip_c2, chip_c3 = st.columns(3)
         with chip_c1:
             if td_val is not None:
-                d = td_val - l_td
                 st.metric(
                     label="RZ TD Rate",
                     value=f"{td_val:.1%}",
-                    delta=f"{d:+.1%} vs league",
+                    delta=f"{td_val - l_td:+.1%} vs league",
                     delta_color="inverse",
                 )
         with chip_c2:
             if epa_val is not None:
-                d = epa_val - l_epa
                 st.metric(
                     label="RZ EPA / play",
                     value=f"{epa_val:+.3f}",
-                    delta=f"{d:+.3f} vs league",
+                    delta=f"{epa_val - l_epa:+.3f} vs league",
                     delta_color="inverse",
                 )
         with chip_c3:
             if sr_val is not None:
-                d = sr_val - l_sr
                 st.metric(
                     label="RZ Success Rate",
                     value=f"{sr_val:.1%}",
-                    delta=f"{d:+.1%} vs league",
+                    delta=f"{sr_val - l_sr:+.1%} vs league",
                     delta_color="inverse",
                 )
         st.markdown("<br>", unsafe_allow_html=True)
@@ -928,7 +920,7 @@ def tab_redzone(df_rz: pd.DataFrame, team: str, color: str, league_avg: dict):
                 "td_rate": np.average(g["td_rate"].dropna(),
                                       weights=g.loc[g["td_rate"].notna(), "plays"])
                            if g["td_rate"].notna().any() else np.nan,
-            }))
+            }), include_groups=False)
             .reset_index()
         )
         df_cov["coverage_look"] = pd.Categorical(
@@ -965,7 +957,7 @@ def tab_redzone(df_rz: pd.DataFrame, team: str, color: str, league_avg: dict):
                 "td_rate": np.average(g["td_rate"].dropna(),
                                       weights=g.loc[g["td_rate"].notna(), "plays"])
                            if g["td_rate"].notna().any() else np.nan,
-            }))
+            }), include_groups=False)
             .reset_index()
         )
 
